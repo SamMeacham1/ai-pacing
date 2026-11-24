@@ -206,7 +206,7 @@ function tiles(d){
     {lab:"Stocks", big:pct(d.sp*100), what:"S&P 500 value", sub:`Range across 90% of futures: ${pct(d.sp05*100)} to ${pct(d.sp95*100)}.`},
     {lab:"Economy", big:pct(gavg(d),2), what:"US GDP, average of 2027 and 2028",
       sub:`2027: ${pct(d.total[0],2)}. 2028: ${pct(d.total[1],2)}. Growth ${d.g[0].toFixed(1)}% and ${d.g[1].toFixed(1)}%, against ${G0[0]}% and ${G0[1]}% without the policy.`},
-    {lab:"Jobs", big:uTxt(upk(d)), what:"Unemployment, higher of 2027 and 2028",
+    {lab:"Unemployment", big:uTxt(upk(d)), what:"Unemployment, higher of 2027 and 2028",
       sub:`Percentage points above the rate without the policy. 2027: ${uTxt(d.unemp[0])}. 2028: ${uTxt(d.unemp[1])}.`},
     {lab:"AI investment", big:pct(Math.min(d.cut[0],d.cut[1])*100,0), what:`AI capex in ${d.cut[0]<d.cut[1]?2027:2028}`,
       sub:`2027: ${pct(d.cut[0]*100,0)} (${bn(d.dBn[0])}). 2028: ${pct(d.cut[1]*100,0)} (${bn(d.dBn[1])}).`}
