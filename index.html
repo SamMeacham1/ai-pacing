@@ -119,6 +119,7 @@ tbody tr:last-child td{border-bottom:0}
     <div class="sel-head"><div class="eyebrow" style="margin:0">Results</div><h2 id="selName"></h2></div>
     <div class="tiles" id="tiles"></div>
     <p class="progress" id="progress"></p>
+    <p class="sec-note" id="spnote">* The S&amp;P 500 numbers are the change in the index's value implied by the policy's effect on companies' expected cash flows. They are not a forecast of how markets would react on the day the policy is announced, which could be larger or smaller depending on investors' risk appetite and expectations.</p>
   </section>
 
   <section>
@@ -129,7 +130,7 @@ tbody tr:last-child td{border-bottom:0}
         <svg id="gdpChart" role="img" aria-label="US GDP change under every policy"></svg>
       </div>
       <div class="card">
-        <h3>S&amp;P 500: every policy</h3>
+        <h3>S&amp;P 500: every policy*</h3>
         <p class="cap">Change in the index's value. Bars show the middle estimate; whiskers show the range across 90% of simulated futures. Select a row to see that policy.</p>
         <svg id="spChart" role="img" aria-label="S&amp;P 500 change under every policy"></svg>
       </div>
@@ -152,7 +153,7 @@ tbody tr:last-child td{border-bottom:0}
       <div class="step"><b>5. Markets and the economy</b>Company values fall, and lower investment and stock wealth slow GDP.</div>
     </div>
     <div class="notes">
-      <p><b>Middle estimates.</b> Each result is the median across 2,000 simulated futures, which vary the uncertain inputs (for example, how much AI demand waits on better models and how labs respond to the policy).</p>
+      <p><b>Middle estimates.</b> Each result is the median across 2,000 simulated futures, which vary the uncertain inputs (for example, how much AI demand waits on better models and how labs respond to the policy). Half the futures give a larger effect and half a smaller one. Setting every input to its central value instead gives somewhat smaller effects (for a 5% compute limit, about 2.1% off the S&amp;P 500 rather than 2.6%), because the futures with large losses are more extreme than those with small ones.</p>
       <p><b>Full enforcement.</b> We assume no capabilities compute gets past the rules. With some evasion, a pause or a compute limit slows capabilities less.</p>
       <p><b>The economy.</b> We translate lower AI investment and lower stock wealth into GDP and unemployment using ratios from the Federal Reserve's FRB/US model. About three quarters of AI investment is imported (mostly chips), so GDP falls far less than investment does. The Federal Reserve responds as it normally would. We report GDP and unemployment for 2027 and 2028 only, because the FRB/US results we draw on stop at 2028.</p>
       <p><b>Why a pause moves stocks so little.</b> Compute keeps growing during a pause, so capabilities catch up within a few years afterwards. Markets value companies on many years of earnings, and a temporary pause changes few of them. Investment still drops sharply while the pause lasts, which is why GDP dips in 2027 and 2028.</p>
@@ -203,7 +204,7 @@ const upk = d=>Math.max(d.unemp[0],d.unemp[1]);
 const uTxt = u=>(u<0.05?"<0.1":sgn(u,1))+" pt";
 function tiles(d){
   const T=[
-    {lab:"Stocks", big:pct(d.sp*100), what:"S&P 500 value", sub:`Range across 90% of futures: ${pct(d.sp05*100)} to ${pct(d.sp95*100)}.`},
+    {lab:"Stocks", big:pct(d.sp*100)+"*", what:"S&P 500 value", sub:`Range across 90% of futures: ${pct(d.sp05*100)} to ${pct(d.sp95*100)}.`},
     {lab:"Economy", big:pct(gavg(d),2), what:"US GDP, average of 2027 and 2028",
       sub:`2027: ${pct(d.total[0],2)}. 2028: ${pct(d.total[1],2)}. Growth ${d.g[0].toFixed(1)}% and ${d.g[1].toFixed(1)}%, against ${G0[0]}% and ${G0[1]}% without the policy.`},
     {lab:"Unemployment", big:uTxt(upk(d)), what:"Unemployment, higher of 2027 and 2028",
@@ -262,7 +263,7 @@ function charts(){
 
 function table(){
   const t=document.getElementById("cmp");
-  t.innerHTML=`<thead><tr><th>Policy</th><th>S&amp;P 500</th><th>GDP 2027</th><th>GDP 2028</th><th>Unemployment 2027</th><th>Unemployment 2028</th><th>AI capex 2027</th><th>AI capex 2028</th><th>Capability levels arrive later, mid-2028</th></tr></thead><tbody></tbody>`;
+  t.innerHTML=`<thead><tr><th>Policy</th><th>S&amp;P 500*</th><th>GDP 2027</th><th>GDP 2028</th><th>Unemployment 2027</th><th>Unemployment 2028</th><th>AI capex 2027</th><th>AI capex 2028</th><th>Capability levels arrive later, mid-2028</th></tr></thead><tbody></tbody>`;
   const tb=t.querySelector("tbody"); let prev=null;
   DATA.forEach((d,i)=>{ const tr=document.createElement("tr"); tr.tabIndex=0; if(i===sel) tr.className="on"; if(prev&&prev!==d.k) tr.classList.add("grp"); prev=d.k;
     tr.innerHTML=`<td>${label(d)}</td><td>${pct(d.sp*100)}</td><td>${pct(d.total[0],2)}</td><td>${pct(d.total[1],2)}</td><td>${uTxt(d.unemp[0])}</td><td>${uTxt(d.unemp[1])}</td><td>${pct(d.cut[0]*100,0)}</td><td>${pct(d.cut[1]*100,0)}</td><td>${months(d.Dy[1])}</td>`;
