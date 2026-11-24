@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="How US AI capability pacing policies would affect the S&amp;P 500, GDP, unemployment and AI investment.">
+<title>Pacing Frontier AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one briefing column; policy picker, then four result tiles, then two charts and a comparison table */
+:root{
+  --bg:#f5f6f8; --surface:#ffffff; --ink:#15202c; --muted:#596574; --line:#dce1e7;
+  --accent:#1e5aa0; --accent-soft:#e1ebf7; --mark:#1e5aa0; --mark-dim:#b8c6d6; --whisk:#7d8a99;
+  --sans:"Public Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141b; --surface:#161e28; --ink:#e6ecf2; --muted:#9aa7b6; --line:#28323e;
+  --accent:#7cb0ec; --accent-soft:#1b2d45; --mark:#7cb0ec; --mark-dim:#3a4a5e; --whisk:#8794a3; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141b; --surface:#161e28; --ink:#e6ecf2; --muted:#9aa7b6; --line:#28323e;
+  --accent:#7cb0ec; --accent-soft:#1b2d45; --mark:#7cb0ec; --mark-dim:#3a4a5e; --whisk:#8794a3; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 64px}
+.wrap{max-width:1040px;margin:0 auto;display:flex;flex-direction:column;gap:40px}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:clamp(28px,4.2vw,40px);font-weight:800;letter-spacing:-0.015em}
+h2{font-size:21px;font-weight:700}
+h3{font-size:15px;font-weight:700}
+p{margin:0}
+.lede{max-width:66ch;color:var(--muted);font-size:17px;margin-top:12px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.num{font-variant-numeric:tabular-nums}
+section{display:flex;flex-direction:column;gap:16px}
+.sec-note{color:var(--muted);font-size:14px;max-width:70ch}
+
+/* policy picker */
+.picker{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fam{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.fam.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.fam p{font-size:14px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto}
+.chip{font:600 14px/1 var(--sans);padding:9px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+.chip:focus-visible,.srow:focus-visible,tbody tr:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* result tiles */
+.sel-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px}
+.sel-head h2{font-size:26px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.tile .lab{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tile .big{font-size:34px;font-weight:800;letter-spacing:-0.02em;line-height:1.1}
+.tile .what{font-size:14px;font-weight:600}
+.tile .sub{font-size:13px;color:var(--muted)}
+.progress{background:var(--accent-soft);border-radius:10px;padding:14px 16px;font-size:15px;max-width:none}
+.progress b{font-weight:700}
+
+/* charts */
+.charts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.card .cap{font-size:13px;color:var(--muted)}
+svg{display:block;width:100%;height:auto;overflow:visible}
+svg text{font-family:var(--sans);fill:var(--muted);font-size:12px}
+svg .val{fill:var(--ink);font-weight:600}
+svg .rowlab{fill:var(--ink);font-size:13px}
+.srow{cursor:pointer}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);font-size:13px;padding:6px 9px;border-radius:6px;z-index:5;white-space:nowrap}
+
+/* table */
+.tscroll{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:760px;font-size:14px}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{font-size:12px;font-weight:600;color:var(--muted);vertical-align:bottom;white-space:normal;line-height:1.3}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--accent-soft)}
+tbody tr.on td{background:var(--accent-soft);font-weight:700}
+tbody tr.grp td{border-top:2px solid var(--line)}
+tbody tr:last-child td{border-bottom:0}
+
+/* method */
+.chain{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;counter-reset:step}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:14px;min-width:0}
+.step b{display:block;font-size:14px;margin-bottom:4px}
+.notes{display:flex;flex-direction:column;gap:10px;max-width:72ch;font-size:15px;color:var(--muted)}
+.notes b{color:var(--ink)}
+
+@media (max-width:860px){
+  .picker{grid-template-columns:1fr}
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .charts{grid-template-columns:1fr}
+  .chain{grid-template-columns:1fr}
+}
+@media (max-width:420px){ .tiles{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">US AI policy · effects of capability pacing</div>
+    <h1>What would pacing frontier AI do to stocks and the economy?</h1>
+    <p class="lede">Choose a policy to see how it changes the S&amp;P 500, US GDP, unemployment and AI investment. Every policy starts on 1 January 2027, and each result is compared with a world without the policy.</p>
+  </header>
+
+  <section aria-labelledby="pick-h">
+    <h2 id="pick-h">Choose a policy</h2>
+    <div class="picker" id="picker"></div>
+  </section>
+
+  <section aria-live="polite">
+    <div class="sel-head"><div class="eyebrow" style="margin:0">Results</div><h2 id="selName"></h2></div>
+    <div class="tiles" id="tiles"></div>
+    <p class="progress" id="progress"></p>
+  </section>
+
+  <section>
+    <div class="charts">
+      <div class="card">
+        <h3>US GDP: every policy</h3>
+        <p class="cap">Change in the level of real GDP compared with no policy, averaged over 2027 and 2028. Select a row to see that policy.</p>
+        <svg id="gdpChart" role="img" aria-label="US GDP change under every policy"></svg>
+      </div>
+      <div class="card">
+        <h3>S&amp;P 500: every policy</h3>
+        <p class="cap">Change in the index's value. Bars show the middle estimate; whiskers show the range across 90% of simulated futures. Select a row to see that policy.</p>
+        <svg id="spChart" role="img" aria-label="S&amp;P 500 change under every policy"></svg>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="cmp-h">
+    <h2 id="cmp-h">All policies side by side</h2>
+    <div class="tscroll"><table id="cmp"></table></div>
+    <p class="sec-note">Select a row to see that policy above. GDP and unemployment are compared with the same year without the policy and run to 2028; unemployment is in percentage points.</p>
+  </section>
+
+  <section aria-labelledby="how-h">
+    <h2 id="how-h">How we get these numbers</h2>
+    <div class="chain">
+      <div class="step"><b>1. Policy</b>Limits how fast frontier labs push AI capabilities forward.</div>
+      <div class="step"><b>2. AI progress</b>Each new capability level reaches customers later.</div>
+      <div class="step"><b>3. Demand</b>The part of AI demand that waits on better models grows more slowly.</div>
+      <div class="step"><b>4. Investment</b>Hyperscalers and labs buy fewer chips and build fewer data centres.</div>
+      <div class="step"><b>5. Markets and the economy</b>Company values fall, and lower investment and stock wealth slow GDP.</div>
+    </div>
+    <div class="notes">
+      <p><b>Middle estimates.</b> Each result is the median across 2,000 simulated futures, which vary the uncertain inputs (for example, how much AI demand waits on better models and how labs respond to the policy).</p>
+      <p><b>Full enforcement.</b> We assume no capabilities compute gets past the rules. With some evasion, a pause or a compute limit slows capabilities less.</p>
+      <p><b>The economy.</b> We translate lower AI investment and lower stock wealth into GDP and unemployment using ratios from the Federal Reserve's FRB/US model. About three quarters of AI investment is imported (mostly chips), so GDP falls far less than investment does. The Federal Reserve responds as it normally would. We report GDP and unemployment for 2027 and 2028 only, because the FRB/US results we draw on stop at 2028.</p>
+      <p><b>Why a pause moves stocks so little.</b> Compute keeps growing during a pause, so capabilities catch up within a few years afterwards. Markets value companies on many years of earnings, and a temporary pause changes few of them. Investment still drops sharply while the pause lasts, which is why GDP dips in 2027 and 2028.</p>
+    </div>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+const DATA = [{"k":"cap","v":0.02,"sp":-0.031,"sp05":-0.066,"sp95":-0.015,"cut":[-0.047,-0.246,-0.221,-0.225,-0.255,-0.174,-0.13,-0.124,-0.128],"dBn":[-52,-283,-282,-329,-452,-310,-225,-214,-217],"Dy":[0.397,1.129,1.726,2.165,2.48,2.689,2.813,2.877,2.912],"total":[-0.073,-0.292,-0.365,-0.488,-0.64,-0.586,-0.56,-0.571,-0.58],"g":[2.33,1.98],"unemp":[0.032,0.144,0.138,0.15,0.192,0.131,0.095,0.087,0.085],"capex":[-0.036,-0.226,-0.217,-0.241,-0.318,-0.208,-0.144,-0.131,-0.128],"wealth":[-0.037,-0.035,-0.034,-0.032,-0.031,-0.03,-0.028,-0.027,-0.026],"supply":[0,-0.03,-0.114,-0.214,-0.292,-0.348,-0.388,-0.413,-0.427]},{"k":"cap","v":0.05,"sp":-0.026,"sp05":-0.056,"sp95":-0.012,"cut":[-0.039,-0.199,-0.174,-0.172,-0.197,-0.115,-0.096,-0.097,-0.103],"dBn":[-43,-228,-222,-252,-352,-208,-171,-173,-179],"Dy":[0.338,0.93,1.375,1.653,1.838,1.955,2.013,2.036,2.043],"total":[-0.06,-0.237,-0.294,-0.384,-0.5,-0.426,-0.418,-0.426,-0.431],"g":[2.34,2.02],"unemp":[0.027,0.116,0.109,0.116,0.15,0.09,0.073,0.071,0.07],"capex":[-0.03,-0.183,-0.171,-0.185,-0.247,-0.14,-0.11,-0.106,-0.105],"wealth":[-0.03,-0.029,-0.028,-0.027,-0.026,-0.024,-0.023,-0.022,-0.021],"supply":[0,-0.025,-0.095,-0.173,-0.227,-0.262,-0.284,-0.298,-0.304]},{"k":"cap","v":0.1,"sp":-0.021,"sp05":-0.046,"sp95":-0.009,"cut":[-0.03,-0.153,-0.128,-0.122,-0.142,-0.072,-0.069,-0.072,-0.077],"dBn":[-33,-174,-164,-178,-252,-131,-123,-127,-137],"Dy":[0.272,0.722,1.027,1.192,1.283,1.341,1.368,1.374,1.375],"total":[-0.047,-0.184,-0.223,-0.284,-0.364,-0.294,-0.295,-0.299,-0.303],"g":[2.35,2.06],"unemp":[0.021,0.09,0.082,0.084,0.109,0.059,0.054,0.053,0.054],"capex":[-0.023,-0.14,-0.126,-0.131,-0.177,-0.088,-0.079,-0.078,-0.081],"wealth":[-0.024,-0.023,-0.022,-0.021,-0.021,-0.02,-0.019,-0.018,-0.017],"supply":[0,-0.02,-0.075,-0.131,-0.166,-0.186,-0.197,-0.203,-0.206]},{"k":"pause","v":0.5,"sp":-0.001,"sp05":-0.003,"sp95":0,"cut":[-0.175,0.038,-0.003,0.001,-0.003,0.009,0.005,0.003,0.002],"dBn":[-192,43,-4,1,-6,16,10,5,3],"Dy":[0.5,0.362,0.219,0.14,0.093,0.062,0.041,0.026,0.016],"total":[-0.133,-0.004,-0.069,-0.044,-0.032,-0.008,-0.006,-0.005,-0.004],"g":[2.27,2.33],"unemp":[0.059,-0.018,0.002,0,0.003,-0.005,-0.003,-0.001,0],"capex":[-0.132,0.035,-0.003,0.001,-0.004,0.011,0.006,0.003,0.002],"wealth":[-0.001,-0.001,-0.001,-0.001,-0.001,-0.001,-0.001,-0.001,-0.001],"supply":[0,-0.037,-0.065,-0.044,-0.027,-0.017,-0.012,-0.008,-0.005]},{"k":"pause","v":1,"sp":-0.002,"sp05":-0.005,"sp95":0,"cut":[-0.304,0.06,-0.01,-0.001,-0.007,0.017,0.01,0.006,0.003],"dBn":[-334,69,-13,-1,-13,29,18,10,5],"Dy":[0.5,0.793,0.444,0.274,0.178,0.119,0.077,0.049,0.031],"total":[-0.232,0.016,-0.109,-0.095,-0.065,-0.016,-0.012,-0.01,-0.008],"g":[2.17,2.45],"unemp":[0.102,-0.029,0.006,0.001,0.006,-0.01,-0.005,-0.002,-0.001],"capex":[-0.23,0.055,-0.01,-0.001,-0.009,0.02,0.011,0.006,0.003],"wealth":[-0.002,-0.002,-0.002,-0.002,-0.002,-0.002,-0.002,-0.002,-0.002],"supply":[0,-0.037,-0.097,-0.093,-0.054,-0.034,-0.022,-0.015,-0.009]},{"k":"pause","v":2,"sp":-0.006,"sp05":-0.012,"sp95":-0.001,"cut":[-0.304,-0.598,0.047,0.154,-0.025,0.043,0.028,0.016,0.008],"dBn":[-334,-685,59,225,-46,76,49,27,15],"Dy":[0.5,1.5,1.532,0.867,0.525,0.338,0.216,0.137,0.086],"total":[-0.236,-0.593,-0.111,-0.068,-0.217,-0.059,-0.038,-0.03,-0.022],"g":[2.16,1.84],"unemp":[0.104,0.306,-0.022,-0.088,0.021,-0.025,-0.014,-0.007,-0.002],"capex":[-0.23,-0.549,0.045,0.165,-0.032,0.051,0.031,0.017,0.009],"wealth":[-0.007,-0.006,-0.006,-0.006,-0.006,-0.005,-0.005,-0.005,-0.005],"supply":[0,-0.037,-0.15,-0.227,-0.18,-0.104,-0.065,-0.042,-0.026]},{"k":"pause","v":3,"sp":-0.009,"sp05":-0.018,"sp95":-0.002,"cut":[-0.304,-0.598,-0.356,0.052,0.073,0.074,0.052,0.03,0.016],"dBn":[-334,-685,-456,75,128,129,91,52,28],"Dy":[0.5,1.5,2.5,2.071,1.112,0.668,0.415,0.261,0.163],"total":[-0.24,-0.596,-0.509,-0.254,-0.261,-0.16,-0.083,-0.056,-0.041],"g":[2.16,1.84],"unemp":[0.105,0.307,0.197,-0.025,-0.045,-0.043,-0.028,-0.014,-0.005],"capex":[-0.23,-0.549,-0.35,0.055,0.09,0.087,0.059,0.032,0.017],"wealth":[-0.01,-0.01,-0.009,-0.009,-0.008,-0.008,-0.008,-0.007,-0.007],"supply":[0,-0.037,-0.15,-0.3,-0.343,-0.239,-0.134,-0.081,-0.051]},{"k":"slow","v":2,"sp":-0.031,"sp05":-0.067,"sp95":-0.017,"cut":[-0.023,-0.111,-0.122,-0.147,-0.212,-0.128,-0.105,-0.108,-0.116],"dBn":[-26,-127,-157,-215,-382,-232,-193,-200,-218],"Dy":[0.25,0.75,1.25,1.75,2.25,2.75,3.25,3.75,4.25],"total":[-0.054,-0.155,-0.229,-0.34,-0.523,-0.485,-0.527,-0.6,-0.679],"g":[2.35,2.1],"unemp":[0.024,0.075,0.085,0.104,0.164,0.102,0.083,0.082,0.085],"capex":[-0.018,-0.102,-0.12,-0.158,-0.268,-0.156,-0.124,-0.123,-0.128],"wealth":[-0.036,-0.035,-0.033,-0.032,-0.031,-0.029,-0.028,-0.027,-0.026],"supply":[0,-0.019,-0.075,-0.15,-0.225,-0.3,-0.375,-0.45,-0.525]}];
+const YRS = [2027,2028,2029,2030,2031,2032,2033,2034,2035];
+const G0 = [2.4, 2.2];
+const FAM = {
+  cap:   {name:"Compute reallocation limit", desc:"Frontier labs may use at most a set share of their compute for capabilities work (training new models and the research behind them). The rest serves customers.",
+          opt:v=>`${Math.round(v*100)}%`, label:v=>`${Math.round(v*100)}% compute reallocation limit`},
+  pause: {name:"Pause", desc:"Frontier capabilities work stops for a set time, then resumes. Labs keep serving customers.",
+          opt:v=>v===0.5?"6 months":`${v} year${v>1?"s":""}`, label:v=>v===0.5?"6-month pause":`${v}-year pause`},
+  slow:  {name:"2x time to each capability level", desc:"Each new capability level takes twice as long to reach as it would without the policy.",
+          opt:()=>"2x time", label:()=>"2x time to each capability level"}
+};
+const ORDER = ["cap","pause","slow"];
+let sel = DATA.findIndex(d=>d.k==="cap"&&d.v===0.05);
+
+const M = "−";
+const sgn = (x,d)=>{const r=+x.toFixed(d); return (r<0?M:r>0?"+":"")+Math.abs(r).toFixed(d);};
+const pct = (x,d=1)=>sgn(x,d)+"%";
+const bn = x=>(x<0?M:"+")+"$"+Math.abs(Math.round(x))+"bn";
+const months = y=>{const m=Math.round(y*12); return m===1?"1 month":`${m} months`;};
+const yrsTxt = y=>y>=1.95?`${(Math.round(y*2)/2).toString()} years`:months(y);
+const minIdx = a=>a.reduce((b,v,i)=>v<a[b]?i:b,0);
+const maxIdx = a=>a.reduce((b,v,i)=>v>a[b]?i:b,0);
+const label = d=>FAM[d.k].label(d.v);
+
+function buildPicker(){
+  const el=document.getElementById("picker"); el.innerHTML="";
+  for(const k of ORDER){
+    const f=FAM[k], box=document.createElement("div"); box.className="fam"; box.dataset.k=k;
+    box.innerHTML=`<h3>${f.name}</h3><p>${f.desc}</p><div class="chips"></div>`;
+    DATA.forEach((d,i)=>{ if(d.k!==k) return;
+      const b=document.createElement("button"); b.type="button"; b.className="chip"; b.id=`opt-${k}-${d.v}`;
+      b.textContent=f.opt(d.v); b.addEventListener("click",()=>select(i)); box.querySelector(".chips").appendChild(b);});
+    el.appendChild(box);
+  }
+}
+
+const gavg = d=>(d.total[0]+d.total[1])/2;
+const upk = d=>Math.max(d.unemp[0],d.unemp[1]);
+const uTxt = u=>(u<0.05?"<0.1":sgn(u,1))+" pt";
+function tiles(d){
+  const T=[
+    {lab:"Stocks", big:pct(d.sp*100), what:"S&P 500 value", sub:`Range across 90% of futures: ${pct(d.sp05*100)} to ${pct(d.sp95*100)}.`},
+    {lab:"Economy", big:pct(gavg(d),2), what:"US GDP, average of 2027 and 2028",
+      sub:`2027: ${pct(d.total[0],2)}. 2028: ${pct(d.total[1],2)}. Growth ${d.g[0].toFixed(1)}% and ${d.g[1].toFixed(1)}%, against ${G0[0]}% and ${G0[1]}% without the policy.`},
+    {lab:"Jobs", big:uTxt(upk(d)), what:"Unemployment, higher of 2027 and 2028",
+      sub:`Percentage points above the rate without the policy. 2027: ${uTxt(d.unemp[0])}. 2028: ${uTxt(d.unemp[1])}.`},
+    {lab:"AI investment", big:pct(Math.min(d.cut[0],d.cut[1])*100,0), what:`AI capex in ${d.cut[0]<d.cut[1]?2027:2028}`,
+      sub:`2027: ${pct(d.cut[0]*100,0)} (${bn(d.dBn[0])}). 2028: ${pct(d.cut[1]*100,0)} (${bn(d.dBn[1])}).`}
+  ];
+  document.getElementById("tiles").innerHTML=T.map(t=>`<div class="tile"><div class="lab">${t.lab}</div><div class="big num">${t.big}</div><div class="what">${t.what}</div><div class="sub num">${t.sub}</div></div>`).join("");
+}
+
+function progress(d){
+  const D=d.Dy; let s;
+  if(d.k==="cap") s=`<b>AI progress:</b> by mid-2028, frontier AI reaches each capability level about <b>${months(D[1])}</b> later than it would without the policy. The difference keeps growing slowly while the limit stays in place, to about ${yrsTxt(D[8])} by 2035.`;
+  else if(d.k==="pause"){const p=maxIdx(D);
+    s=`<b>AI progress:</b> frontier capabilities stop improving during the pause. Afterwards they catch up, because compute keeps growing: capability levels arrive up to <b>${months(D[p])}</b> later (mid-${YRS[p]}), and less than ${Math.max(1,Math.ceil(D[8]*12))} month${Math.ceil(D[8]*12)>1?"s":""} later by 2035.`;}
+  else s=`<b>AI progress:</b> each capability level takes twice as long to reach, so it arrives half a year later for every year the policy runs: <b>${months(D[1])}</b> later by mid-2028.`;
+  document.getElementById("progress").innerHTML=s;
+}
+
+const tip=document.getElementById("tip");
+function showTip(e,txt){tip.textContent=txt;tip.hidden=false;const x=Math.min(e.clientX+12,innerWidth-tip.offsetWidth-8);tip.style.left=x+"px";tip.style.top=(e.clientY-36)+"px";}
+function hideTip(){tip.hidden=true;}
+const NS="http://www.w3.org/2000/svg";
+function el(tag,attrs,parent){const n=document.createElementNS(NS,tag);for(const k in attrs)n.setAttribute(k,attrs[k]);if(parent)parent.appendChild(n);return n;}
+
+// one row per policy, grouped by family; bar = middle estimate, optional whisker = 90% range
+function rowChart(id,val,lo,hi,fmt,step,tipf){
+  const svg=document.getElementById(id); svg.innerHTML="";
+  const rowH=26, gap=10, T=6, B=24, L=150, R=52, W=440;
+  const groups=ORDER.map(k=>DATA.map((d,i)=>[d,i]).filter(([d])=>d.k===k));
+  const H=T+groups.reduce((a,g)=>a+g.length*rowH,0)+gap*(groups.length-1)+B;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const xmin=Math.floor(Math.min(...DATA.map(d=>lo?lo(d):val(d)))/step)*step-step*0.25;
+  const x=v=>L+v/xmin*(W-L-R);
+  for(let t=0;t>=xmin;t-=step){ t=+t.toFixed(4); el("line",{x1:x(t),x2:x(t),y1:T,y2:H-B,stroke:"var(--line)","stroke-width":t===0?1.5:1},svg);
+    const tx=el("text",{x:x(t),y:H-6,"text-anchor":"middle"},svg); tx.textContent=t===0?"0":M+Math.abs(t)+"%"; }
+  let yy=T;
+  groups.forEach(g=>{ g.forEach(([d,i])=>{
+    const on=i===sel, cy=yy+rowH/2, v=val(d), grp=el("g",{class:"srow",tabindex:0,role:"button","aria-label":`${label(d)}: ${fmt(v)}`},svg);
+    el("rect",{x:0,y:yy,width:W,height:rowH,fill:on?"var(--accent-soft)":"transparent",rx:4},grp);
+    const lt=el("text",{x:8,y:cy+4,class:"rowlab","font-weight":on?700:400},grp); lt.textContent=label(d).replace(" compute reallocation limit"," limit").replace(" to each capability level","");
+    el("rect",{x:x(0),y:cy-7,width:Math.max(x(v)-x(0),2),height:14,rx:3,fill:on?"var(--mark)":"var(--mark-dim)"},grp);
+    if(lo){ el("line",{x1:x(hi(d)),x2:x(lo(d)),y1:cy,y2:cy,stroke:"var(--whisk)","stroke-width":1.5},grp);
+      for(const e of [hi(d),lo(d)]) el("line",{x1:x(e),x2:x(e),y1:cy-5,y2:cy+5,stroke:"var(--whisk)","stroke-width":1.5},grp); }
+    const tval=el("text",{x:W-2,y:cy+4,"text-anchor":"end",class:on?"val":""},grp); tval.textContent=fmt(v);
+    grp.addEventListener("click",()=>select(i));
+    grp.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();select(i);}});
+    grp.addEventListener("mousemove",e=>showTip(e,tipf(d)));
+    grp.addEventListener("mouseleave",hideTip);
+    yy+=rowH; }); yy+=gap; });
+}
+function charts(){
+  rowChart("gdpChart",d=>gavg(d),null,null,v=>pct(v,2),0.1,d=>`${label(d)}: 2027 ${pct(d.total[0],2)}, 2028 ${pct(d.total[1],2)}`);
+  rowChart("spChart",d=>d.sp*100,d=>d.sp05*100,d=>d.sp95*100,v=>pct(v),2,d=>`${label(d)}: ${pct(d.sp*100)} (90% range ${pct(d.sp05*100)} to ${pct(d.sp95*100)})`);
+}
+
+function table(){
+  const t=document.getElementById("cmp");
+  t.innerHTML=`<thead><tr><th>Policy</th><th>S&amp;P 500</th><th>GDP 2027</th><th>GDP 2028</th><th>Unemployment 2027</th><th>Unemployment 2028</th><th>AI capex 2027</th><th>AI capex 2028</th><th>Capability levels arrive later, mid-2028</th></tr></thead><tbody></tbody>`;
+  const tb=t.querySelector("tbody"); let prev=null;
+  DATA.forEach((d,i)=>{ const tr=document.createElement("tr"); tr.tabIndex=0; if(i===sel) tr.className="on"; if(prev&&prev!==d.k) tr.classList.add("grp"); prev=d.k;
+    tr.innerHTML=`<td>${label(d)}</td><td>${pct(d.sp*100)}</td><td>${pct(d.total[0],2)}</td><td>${pct(d.total[1],2)}</td><td>${uTxt(d.unemp[0])}</td><td>${uTxt(d.unemp[1])}</td><td>${pct(d.cut[0]*100,0)}</td><td>${pct(d.cut[1]*100,0)}</td><td>${months(d.Dy[1])}</td>`;
+    tr.addEventListener("click",()=>select(i)); tr.addEventListener("keydown",e=>{if(e.key==="Enter"){select(i);}});
+    tb.appendChild(tr); });
+}
+
+function select(i){
+  sel=i; const d=DATA[i];
+  document.querySelectorAll(".fam").forEach(f=>f.classList.toggle("on",f.dataset.k===d.k));
+  document.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",String(c.id===`opt-${d.k}-${d.v}`)));
+  document.getElementById("selName").textContent=label(d);
+  tiles(d); progress(d); charts(); table();
+}
+buildPicker(); select(sel);
+</script>
+
+</body>
+</html>
